@@ -3,80 +3,104 @@ package controller;
 import config.UserModel;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import java.io.IOException;
 import java.util.Properties;
 import static io.restassured.RestAssured.given;
 
 public class UserController {
-    Properties prop;
+
+    private final Properties prop;
 
     public UserController(Properties prop) {
-        RestAssured.baseURI = "https://dailyfinanceapi.roadtocareer.net";
+        RestAssured.baseURI = prop.getProperty("baseURL");
         this.prop = prop;
     }
 
-    public Response registerUser(UserModel userModel) {
-        return given().contentType("application/json").body(userModel).when().post("/api/auth/register");
-    }
-
+    // ---------------- AUTH ----------------
     public Response adminLogin(UserModel userModel) {
-        return given().contentType("application/json").body(userModel).when().post("/api/auth/login");
-    }
-
-    public Response getUser() throws IOException {
         return given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
-                .when().get("/api/user/users");
-    }
-
-    public Response searchUser(String userId) throws IOException {
-        return given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
-                .when()
-                .get("/api/user/users/" + userId); // Fixed: Removed /search/
-    }
-
-    public Response editUser(String userId, UserModel userModel) {
-        return given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
                 .body(userModel)
-                .when().put("/api/user/update/" + userId); // Keep /update/ for User Edit
+                .when()
+                .post("/api/auth/login");
     }
 
     public Response userLogin(UserModel userModel) {
-        return given().contentType("application/json").body(userModel).when().post("/api/auth/login");
-    }
-
-    public Response getItem() {
         return given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
-                .when().get("/api/costs");
+                .body(userModel)
+                .when()
+                .post("/api/auth/login");
     }
 
-    public Response createItem(UserModel costModel) {
+    public Response registerUser(UserModel userModel, String token) {
         return given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
+                .header("Authorization", "Bearer " + token)
+                .body(userModel)
+                .when()
+                .post("/api/auth/register");
+    }
+
+    // ---------------- USER ----------------
+    public Response getUser(String token) {
+        return given()
+                .contentType("application/json")
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/api/user/users");
+    }
+
+    public Response searchUser(String userId, String adminToken) {
+        return given()
+                .contentType("application/json")
+                .header("Authorization", "Bearer " + adminToken)
+                .when()
+                .get("/api/user/users/" + userId);
+    }
+
+
+    public Response editUser(String userId, UserModel user, String token) {
+        return given()
+                .contentType("application/json")
+                .header("Authorization", "Bearer " + token)
+                .body(user)
+                .when()
+                .put("/api/user/users/" + userId);
+    }
+
+
+    // ---------------- ITEM / COST ----------------
+    public Response getItem(String token) {
+        return given()
+                .contentType("application/json")
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/api/costs");
+    }
+
+    public Response createItem(UserModel costModel, String token) {
+        return given()
+                .contentType("application/json")
+                .header("Authorization", "Bearer " + token)
                 .body(costModel)
-                .when().post("/api/costs");
+                .when()
+                .post("/api/costs");
     }
 
-    public Response updateItem(String itemId, UserModel costModel) {
+    public Response updateItem(String itemId, UserModel costModel, String token) {
         return given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
+                .header("Authorization", "Bearer " + token)
                 .body(costModel)
-                .when().put("/api/costs/" + itemId); // Fixed: Removed /update/
+                .when()
+                .put("/api/costs/" + itemId);
     }
 
-    public Response deleteItem(String itemId) {
+    public Response deleteItem(String itemId, String token) {
         return given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + prop.getProperty("token"))
-                .when().delete("/api/costs/" + itemId);
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .delete("/api/costs/" + itemId);
     }
 }

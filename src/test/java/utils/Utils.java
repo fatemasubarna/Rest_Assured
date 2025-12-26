@@ -1,33 +1,22 @@
 package utils;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class Utils {
 
-    private static PropertiesConfiguration config;
+    private static final Map<String, String> env = new HashMap<>();
 
-    static {
-        try {
-            config = new PropertiesConfiguration("src/test/resources/config.properties");
-        } catch (ConfigurationException e) {
-            throw new RuntimeException("Failed to load config.properties", e);
-        }
+    public static void setEnv(String key, String value) {
+        env.put(key, value);
     }
 
-    // Save environment variable
-    public static void setEnv(String key, String value) throws ConfigurationException {
-        config.setProperty(key, value);
-        config.save();
-    }
-
-    // Read environment variable
     public static String getEnv(String key) {
-        return config.getString(key);
+        return env.get(key);
     }
 
-    // Generate random number (inclusive)
     public static int generateRandomNumber(int min, int max) {
-        return (int) (Math.random() * (max - min + 1)) + min;
+        return new Random().nextInt((max - min) + 1) + min;
     }
 }
