@@ -28,7 +28,7 @@ public class UserTestRunner extends Setup {
     }
 
 
-    // ADMIN LOGIN
+    // --------ADMIN LOGIN-----
 
     @Test(priority = 1, description = "Admin login")
     public void adminLogin() {
@@ -45,10 +45,48 @@ public class UserTestRunner extends Setup {
         Assert.assertNotNull(token, "Admin token should not be null");
 
         Utils.setEnv("adminToken", token);
-        //System.out.println("Admin logged in successfully");
+        System.out.println("Admin logged in successfully");
     }
 
-    // User List
+    @Test(priority = 1, description = "Admin login with invalid credentials")
+    public void adminLoginWithInvalidCredentials() {
+
+        UserModel admin = new UserModel();
+        admin.setEmail("wrongadmin@test.com");
+        admin.setPassword("wrongpassword");
+
+        Response res = userController.adminLogin(admin);
+        res.then().log().ifValidationFails();
+
+        // Validate status code (usually 401 or 400 depending on API)
+        Assert.assertTrue(
+                res.getStatusCode() == 401 || res.getStatusCode() == 400,
+                "Invalid login should return 400 or 401"
+        );
+
+        // Validate error message
+        String message = res.jsonPath().getString("message");
+        Assert.assertNotNull(message, "Invalid email or password");
+    }
+
+    @Test(priority = 1, description = "Admin login without credentials")
+    public void adminLoginWithoutCredentials() {
+
+        UserModel admin = new UserModel(); // no email, no password
+
+        Response res = userController.adminLogin(admin);
+        res.then().log().ifValidationFails();
+
+        // Validate status code
+        Assert.assertEquals(res.getStatusCode(), 401, "Missing credentials should return 400");
+
+        // Validate error message
+        String message = res.jsonPath().getString("message");
+        Assert.assertNotNull(message, "Invalid email or password");
+    }
+
+
+    // --------------- Get User List ----------------
 
     @Test(priority = 2, description = "Get user list", dependsOnMethods = "adminLogin")
     public void getUserList() {
@@ -56,12 +94,10 @@ public class UserTestRunner extends Setup {
         res.then().log().ifValidationFails();
 
         Assert.assertEquals(res.getStatusCode(), 200, "Get user list should return 200");
-        System.out.println("✓ User list retrieved successfully");
     }
 
 
-    // REGISTER NEW USER
-
+    // ---------------- REGISTER NEW USER ----------------
     @Test(priority = 3, description = "Register new user", dependsOnMethods = "adminLogin")
     public void registerUser() {
         UserModel user = new UserModel();
@@ -98,10 +134,35 @@ public class UserTestRunner extends Setup {
         Utils.setEnv("email", email);
         Utils.setEnv("password", password);
 
-        System.out.println("✓ User registered successfully with ID: " + userId);
+        System.out.println("User registered successfully with ID: " + userId);
     }
 
-// SEARCH BY USER ID
+    @Test(priority = 3, description = "Register user with existing email", dependsOnMethods = "registerUser")
+    public void registerUserWithExistingEmail() {
+
+        UserModel user = new UserModel();
+        user.setFirstName("existing");
+        user.setLastName("User");
+        user.setEmail(Utils.getEnv("email"));
+        user.setPassword("Pa$$w0rd!");
+        user.setPhoneNumber("+12025558888");
+        user.setAddress("Dhaka");
+        user.setGender("Male");
+        user.setTermsAccepted(true);
+
+        Response res = userController.registerUser(user, Utils.getEnv("adminToken"));
+        res.then().log().ifValidationFails();
+
+        Assert.assertTrue(
+                res.getStatusCode() == 400 || res.getStatusCode() == 409,
+                "User already exists with this email address"
+        );
+    }
+
+
+
+
+// -------------SEARCH BY USER ID--------------
 
     @Test(priority = 4, description = "Search user by ID", dependsOnMethods = "registerUser")
     public void searchUserById() {
@@ -122,7 +183,7 @@ public class UserTestRunner extends Setup {
     }
 
 
-    // USER LOGIN
+    // -------------USER LOGIN-------------
 
     @Test(priority = 5, description = "User login", dependsOnMethods = "registerUser")
     public void userLogin() {
@@ -139,8 +200,38 @@ public class UserTestRunner extends Setup {
         Assert.assertNotNull(token, "User token should not be null");
 
         Utils.setEnv("userToken", token);
-        System.out.println("✓ User logged in successfully");
+        System.out.println("User logged in successfully");
     }
+
+
+    @Test(priority = 5, description = "User login without credentials", dependsOnMethods = "adminLogin")
+    public void userLoginWithoutCredentials() {
+        UserModel user = new UserModel(); // empty email & password
+
+        Response res = userController.userLogin(user);
+        res.then().log().all();
+
+        // Backend may return 400 or 401, not JSON
+        int statusCode = res.getStatusCode();
+        Assert.assertTrue(
+                res.getStatusCode() == 401 || res.getStatusCode() == 409,
+                "Invalid email or password"
+        );
+    }
+    @Test(priority = 5, description = "User login with wrong email", dependsOnMethods = "registerUser")
+    public void userLoginWrongEmail() {
+        UserModel user = new UserModel();
+        user.setEmail("wrongemail@test.com"); // invalid email
+        user.setPassword(Utils.getEnv("password")); // correct password
+
+        Response res = userController.userLogin(user);
+        res.then().log().all();
+
+        int statusCode = res.getStatusCode();
+        Assert.assertTrue(res.getStatusCode() == 401 || res.getStatusCode() == 409,
+                "Invalid email or password");
+    }
+    
 
 
     // UPDATE USER
