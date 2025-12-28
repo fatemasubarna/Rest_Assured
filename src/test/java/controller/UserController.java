@@ -65,7 +65,7 @@ public class UserController {
                 .header("Authorization", "Bearer " + token)
                 .body(user)
                 .when()
-                .put("/api/user/users/" + userId);
+                .put("/api/user/" + userId);
     }
 
 
