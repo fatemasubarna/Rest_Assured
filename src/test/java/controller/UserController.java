@@ -55,7 +55,7 @@ public class UserController {
                 .contentType("application/json")
                 .header("Authorization", "Bearer " + adminToken)
                 .when()
-                .get("/api/user/users/" + userId);
+                .get("/api/user/" + userId);
     }
 
 

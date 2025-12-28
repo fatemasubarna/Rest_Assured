@@ -27,9 +27,8 @@ public class UserTestRunner extends Setup {
         userController = new UserController(prop);
     }
 
-    // ============================================================
+
     // ADMIN LOGIN
-    // ============================================================
 
     @Test(priority = 1, description = "Admin login")
     public void adminLogin() {
@@ -46,12 +45,10 @@ public class UserTestRunner extends Setup {
         Assert.assertNotNull(token, "Admin token should not be null");
 
         Utils.setEnv("adminToken", token);
-        System.out.println("✓ Admin logged in successfully");
+        //System.out.println("Admin logged in successfully");
     }
 
-    // ============================================================
-    // USER LIST
-    // ============================================================
+    // User List
 
     @Test(priority = 2, description = "Get user list", dependsOnMethods = "adminLogin")
     public void getUserList() {
@@ -62,9 +59,8 @@ public class UserTestRunner extends Setup {
         System.out.println("✓ User list retrieved successfully");
     }
 
-    // ============================================================
-    // REGISTER USER
-    // ============================================================
+
+    // REGISTER NEW USER
 
     @Test(priority = 3, description = "Register new user", dependsOnMethods = "adminLogin")
     public void registerUser() {
@@ -105,11 +101,30 @@ public class UserTestRunner extends Setup {
         System.out.println("✓ User registered successfully with ID: " + userId);
     }
 
-    // ============================================================
-    // USER LOGIN
-    // ============================================================
+// SEARCH BY USER ID
 
-    @Test(priority = 4, description = "User login", dependsOnMethods = "registerUser")
+    @Test(priority = 4, description = "Search user by ID", dependsOnMethods = "registerUser")
+    public void searchUserById() {
+        String userId = Utils.getEnv("userId");
+
+        Response res = userController.searchUser(userId, Utils.getEnv("adminToken"));
+        res.then().log().ifValidationFails();
+
+        Assert.assertEquals(res.getStatusCode(), 200, "Search user should return 200");
+
+        // Verify the returned user matches
+        Assert.assertEquals(res.jsonPath().getString("_id"), userId, "User ID should match");
+        Assert.assertEquals(res.jsonPath().getString("email"), Utils.getEnv("email"), "Email should match");
+        Assert.assertEquals(res.jsonPath().getString("firstName"), originalFirstName, "First name should match");
+        Assert.assertEquals(res.jsonPath().getString("lastName"), originalLastName, "Last name should match");
+
+        System.out.println("✓ User found successfully by ID: " + userId);
+    }
+
+
+    // USER LOGIN
+
+    @Test(priority = 5, description = "User login", dependsOnMethods = "registerUser")
     public void userLogin() {
         UserModel user = new UserModel();
         user.setEmail(Utils.getEnv("email"));
@@ -127,11 +142,10 @@ public class UserTestRunner extends Setup {
         System.out.println("✓ User logged in successfully");
     }
 
-    // ============================================================
-    // UPDATE USER
-    // ============================================================
 
-    @Test(priority = 5, description = "Update user", dependsOnMethods = "userLogin")
+    // UPDATE USER
+
+    @Test(priority = 6, description = "Update user", dependsOnMethods = "userLogin")
     public void updateUser() {
         UserModel user = new UserModel();
 
@@ -165,15 +179,15 @@ public class UserTestRunner extends Setup {
         Assert.assertEquals(res.jsonPath().getString("phoneNumber"), updatedPhoneNumber,
                 "Phone number should be updated");
 
-        System.out.println("✓ User updated successfully");
-        System.out.println("⚠️  Note: Password was re-hashed during update. User cannot log in again with original password.");
+        System.out.println("User updated successfully");
+        System.out.println("Note: Password was re-hashed during update. User cannot log in again with original password.");
     }
 
-    // ============================================================
-    // ITEM / COST MANAGEMENT
-    // ============================================================
 
-    @Test(priority = 6, description = "Create new item", dependsOnMethods = "userLogin")
+    // CREATE ITEM
+
+
+    @Test(priority = 7, description = "Create new item", dependsOnMethods = "userLogin")
     public void createItem() {
         UserModel item = new UserModel();
         item.setItemName(faker.commerce().productName());
@@ -196,7 +210,9 @@ public class UserTestRunner extends Setup {
         System.out.println("Item created successfully with ID: " + itemId);
     }
 
-    @Test(priority = 7, description = "Get item list", dependsOnMethods = "userLogin")
+    // GET ITEM LIST
+
+    @Test(priority = 8, description = "Get item list", dependsOnMethods = "userLogin")
     public void getItemList() {
         Response res = userController.getItem(Utils.getEnv("userToken"));
         res.then().log().ifValidationFails();
@@ -205,7 +221,9 @@ public class UserTestRunner extends Setup {
         System.out.println("Item list retrieved successfully");
     }
 
-    @Test(priority = 8, description = "Update item", dependsOnMethods = "createItem")
+    // UPDATE ITEM
+
+    @Test(priority = 9, description = "Update item", dependsOnMethods = "createItem")
     public void updateItem() {
         UserModel item = new UserModel();
         item.setItemName("Updated Product Name");
@@ -222,7 +240,9 @@ public class UserTestRunner extends Setup {
         System.out.println("Item updated successfully");
     }
 
-    @Test(priority = 9, description = "Delete item", dependsOnMethods = "updateItem")
+    // DELETE ITEM
+
+    @Test(priority = 10, description = "Delete item", dependsOnMethods = "updateItem")
     public void deleteItem() {
         Response res = userController.deleteItem(Utils.getEnv("itemId"), Utils.getEnv("userToken"));
         res.then().log().ifValidationFails();
