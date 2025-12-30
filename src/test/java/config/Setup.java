@@ -1,6 +1,8 @@
 package config;
 
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,7 +11,7 @@ import java.util.Properties;
 public class Setup {
     public Properties prop;
 
-    @BeforeTest
+    @BeforeClass
     public void setup() throws IOException {
         prop = new Properties();
         try (FileInputStream fs = new FileInputStream("./src/test/resources/config.properties")) {

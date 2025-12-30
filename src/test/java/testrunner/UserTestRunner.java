@@ -7,6 +7,7 @@ import controller.UserController;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import utils.Utils;
 
@@ -22,7 +23,7 @@ public class UserTestRunner extends Setup {
     private String originalPhoneNumber;
     private String originalGender;
 
-    @BeforeClass
+    @BeforeClass(dependsOnMethods = "setup")
     public void setupController() {
         userController = new UserController(prop);
     }

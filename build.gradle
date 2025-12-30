@@ -1,80 +1,61 @@
 plugins {
     id 'java'
+    id 'io.qameta.allure' version '2.11.2'
 }
 
-group = 'org.example'
-version = '1.0-SNAPSHOT'
+group 'org.example'
+version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
+// Java toolchain
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(23)
+    }
+}
+
+configurations {
+    agent
+}
+
 dependencies {
-    // REST Assured for API testing (5.5.0 is stable)
-    testImplementation 'io.rest-assured:rest-assured:5.5.0'
+    // Rest Assured for API testing
+    testImplementation 'io.rest-assured:rest-assured:5.3.0'
 
-    // Commons Configuration for properties management
-    implementation 'commons-configuration:commons-configuration:1.10'
+    // TestNG
+    testImplementation 'org.testng:testng:7.7.1'
 
-    // TestNG for test execution
-    testImplementation 'org.testng:testng:7.10.2'
+    // Faker for test data
+    testImplementation 'com.github.javafaker:javafaker:1.0.2'
 
-    // Jackson for JSON serialization - 2.18.2 is the latest stable
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    // JSON parsing
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    testImplementation 'org.json:json:20230227'
 
-    // JavaFaker for generating test data
-    implementation 'com.github.javafaker:javafaker:1.0.2'
+    // AspectJ weaver for Allure
+    agent 'org.aspectj:aspectjweaver:1.9.20'
 
-    // Lombok (optional - only if you want to use @Data, @Getter, etc.)
-    compileOnly 'org.projectlombok:lombok:1.18.34'
-    annotationProcessor 'org.projectlombok:lombok:1.18.34'
-    testCompileOnly 'org.projectlombok:lombok:1.18.34'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
-    testImplementation 'ch.qos.logback:logback-classic:1.5.6'
-
-
-
-
-
+    // Allure TestNG integration
+    testImplementation 'io.qameta.allure:allure-testng:2.24.0'
 }
 
 test {
-    useTestNG() {
-        // Preserve test execution order based on priority
-        preserveOrder = true
+    useTestNG()
+    jvmArgs = ["-javaagent:${configurations.agent.singleFile}"]
+    systemProperty 'allure.results.directory', "$buildDir/allure-results"
 
-        // Optional: specify suite XML file
-        // suites 'src/test/resources/testng.xml'
-
-        // Optional: parallel execution
-        // parallel = 'methods'
-        // threadCount = 3
-    }
-
-    // Show detailed test results in console
     testLogging {
         events "passed", "skipped", "failed"
-        exceptionFormat "full"
         showStandardStreams = true
-        showExceptions true
-        showCauses true
-        showStackTraces true
-    }
-
-    // Maximum heap size for test JVM
-    maxHeapSize = '1G'
-}
-
-// Generate HTML test report
-tasks.withType(Test) {
-    reports {
-        html.required = true
-        junitXml.required = true
     }
 }
 
-// Task to clean test results
-task cleanTestResults(type: Delete) {
-    delete 'build/test-results'
-    delete 'build/reports/tests'
+// Allure plugin configuration (do NOT use resultsDir or reportDir here)
+allure {
+    version = '2.24.0'
+    autoconfigure = true
+    aspectjweaver = true
 }
