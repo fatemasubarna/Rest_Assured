@@ -77,8 +77,8 @@ Postman Documentation: https://www.postman.com/fatemasubarna/public-workspace/do
 
 -----
 ## Test Case Documentation
-Test case link (replace with your actual link):
-Test Cases
+Test case link: https://docs.google.com/spreadsheets/d/10J1HCpMlvQu3l46WtO0RtDB4-8bl0Q_pKXpMyhf_84I/edit?usp=sharing
+
 
 ----
 ## Allure Report
